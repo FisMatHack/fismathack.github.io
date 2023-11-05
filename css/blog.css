@@ -17,7 +17,7 @@
             margin-right: 20px; 
             margin-bottom: 20px; 
             margin-left: 20px;
-            width: 100%;
+            width: 80%;
         }
 
        
@@ -28,7 +28,7 @@
 
        
         .article-textbox {
-            width: 100%;
+            width: 80%;
             height: 100%;
             padding: 10px;
             background-color: #111;
