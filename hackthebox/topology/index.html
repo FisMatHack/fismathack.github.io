@@ -16,9 +16,9 @@
 <br><br>
 When we start browsing the website, we notice something striking, referring to an equation generator in LaTeX.
 </p>
-    <img src="home_topology.png" alt="home topology">
+    <img src="home_topology.png" alt="home topology" style="max-width: 100%; height: auto;">
 <p>However, it returns an error that it is simply due to virtual hosting. Therefore, I will add that subdomain to my /etc/hosts file.<br></p>
-<img src="virtual_hosting.png" alt="virtual hosting">
+<img src="virtual_hosting.png" alt="virtual hosting" style="max-width: 100%; height: auto;">
 <code>echo "10.10.11.217 latex.topology.htb" | sudo tee -a /etc/hosts</code>
 <p>The above command will make "latex.topology.htb" point to IP address 10.10.11.216, placing it in the last line of our /etc/hosts file.
 <br><br>
@@ -32,11 +32,11 @@ I will also add "topology.htb":</p>
 <br><br>
 In just a moment, I find a virtual directory with a 401 status code, which indicates "forbidden</p>
 <code>ffuf -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt -u "http://topology.htb/" -H "Host: FUZZ.topology.htb" -fw 1612</code>
-<img src="vhost_enumeration.png" alt="vhost enumeration">
+<img src="vhost_enumeration.png" alt="vhost enumeration" style="max-width: 100%; height: auto;">
 <p>I add dev to my /etc/hosts:</p>
 <code>echo "10.10.11.217 dev.topology.htb" | sudo tee -a /etc/hosts</code>
 <p>When accessing dev.topology.htb I get this:</p>
-<img src="dev.png" alt="dev">
+<img src="dev.png" alt="dev" style="max-width: 100%; height: auto;">
 <p>This listed the contents of the entire file and was not locked. Since I was able to see the virtual directory that required authentication, I will explore further.</p>
 <code>$\lstinputlisting{/var/www/dev/.htpasswd}$</code>
 <p>It works! I got the user and the hash. I simply copied the URL and ran it with curl.</p>
@@ -52,9 +52,9 @@ In just a moment, I find a virtual directory with a 401 status code, which indic
 <p>The password is "calculus20".<br><br>we try to see if it is applicable for ssh:</p>
 <code>sshpass -p 'calculus20' ssh 'vdaisley@10.10.11.217'</code>
 <p>I then uploaded pspy64 to the victim machine and detected the following:</p>
-<img src="pspy.png" alt="pspy">
+<img src="pspy.png" alt="pspy" style="max-width: 100%; height: auto;">
 <p>In short, it indicates that it will run any file with the .plt extension located in the /opt/gnuplot directory, using "gnuplot". Since it runs with this, I will proceed to look for some "gnuplot shell command".</p>
-<img src="command_execution_gnuplot.png" alt="command execution gnuplot">
+<img src="command_execution_gnuplot.png" alt="command execution gnuplot" style="max-width: 100%; height: auto;">
 <p>The document mentions that I can execute commands using either "! dir" or "system "dir"". I will opt to use "system" and create a simple file with the name "shell.plt". This way, I will ensure that the file has the .plt extension. Then, I will have to deposit it in the path /opt/gnuplot, so:</p>
 <code>cd /opt/gnuplot</code>
 <p>Attacker:</p>
