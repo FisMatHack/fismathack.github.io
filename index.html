@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>FisMatHack - Home</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #1a1a1a;
+            color: #fff;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: #111;
+            padding: 20px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 36px;
+            color: #0f0;
+        }
+
+        nav {
+            background-color: #1a1a1a;
+            text-align: center;
+            padding: 10px;
+        }
+
+        nav ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        nav li {
+            display: inline;
+            margin-right: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            background-color: #111;
+            padding: 20px;
+            border: 1px solid #0f0;
+            border-radius: 5px;
+        }
+
+        .blog-post {
+            margin-bottom: 20px;
+            border-bottom: 1px solid #0f0;
+            padding-bottom: 20px;
+        }
+
+        .blog-post h2 {
+            font-size: 24px;
+            color: #0f0;
+        }
+
+        .blog-post p {
+            font-size: 16px;
+            color: #fff;
+        }
+
+        a {
+            color: #0f0;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .read-more-link {
+            display: block;
+            margin-top: 10px;
+            color: #0f0;
+        }
+
+        .read-more-link:hover {
+            text-decoration: underline;
+        }
+
+        code {
+            background-color: #1a1a1a;
+            color: #0f0;
+            padding: 2px 4px;
+            border: 1px solid #0f0;
+            border-radius: 3px;
+        }
+
+        .donate-banner {
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            padding: 10px 0;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+        }
+
+        .donation-text {
+            font-size: 18px;
+            margin: 5px 0;
+        }
+
+        .donate-button {
+            background-color: #0f0;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+            display: inline-block;
+            margin: 5px;
+        }
+
+        .donate-button:hover {
+            background-color: #090;
+        }
+
+
+    </style>
+</head>
+<body>
+    <header>
+        <h1>FisMatHack</h1>
+    </header>
+    
+    <nav>
+        <ul>
+            <li><a href="/">Home</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+
+        <div class="blog-post">
+            <h2>Topology</h2>
+            <p>This is a HackTheBox machine with easy difficulty. You will learn how to bypass filters to execute a LaTeX injection and subsequently read an .htpasswd file to gain access to another user. In addition, we will exploit a cron job to achieve remote code execution (RCE) via GNUPLOT.</p>
+            <a class="read-more-link" href="htb-topology.html">Read more</a>
+        </div>
+        
+       
+    </div>
+     <div class="donate-banner">
+    <p>Do you like my content?</p>
+    <p class="donation-text">Support me by donating to my father's account!</p>
+    <a href="https://paypal.me/fismathacktools" class="donate-button">Donate</a>
+</div>
+
+</body>
+</html>
