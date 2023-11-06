@@ -17,7 +17,7 @@
             margin-right: 20px; 
             margin-bottom: 20px; 
             margin-left: 20px;
-            width: 90%;
+            width: 95%;
         }
 
        
@@ -28,9 +28,9 @@
 
        
         .article-textbox {
-            width: 90%;
+            width: 95%;
             height: 100%;
-            padding: 10px;
+            padding: 5px;
             background-color: #111;
             color: #fff;
             border: 1px solid #0f0;
