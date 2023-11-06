@@ -19,6 +19,7 @@ When we start browsing the website, we notice something striking, referring to a
     <img src="home_topology.png" alt="home topology" style="max-width: 100%; height: auto;">
 <p>However, it returns an error that it is simply due to virtual hosting. Therefore, I will add that subdomain to my /etc/hosts file.<br></p>
 <img src="virtual_hosting.png" alt="virtual hosting" style="max-width: 100%; height: auto;">
+            <br>
 <code>echo "10.10.11.217 latex.topology.htb" | sudo tee -a /etc/hosts</code>
 <p>The above command will make "latex.topology.htb" point to IP address 10.10.11.216, placing it in the last line of our /etc/hosts file.
 <br><br>
