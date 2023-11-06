@@ -26,7 +26,7 @@ If you are wondering why this is an error-based SQL injection, the answer is sim
 <p>Now, notice that the error tells us that an AND must have a Boolean condition.</p>
 <br>
 <p>I tried deleting the cookie to see if I had more space.</p>
-<code>' AND 1=CAST((SELECT 1) AS int)-- -</code<
+<code>' AND 1=CAST((SELECT 1) AS int)-- -</code>
 <p>I tried to list all the tables using "SELECT schema_name FROM information_schema.schemata" to list all the databases, but it simply would not allow me to do so due to the length of the error, which would not allow me to enter multiple characters. There may be ways around this obstacle, but since this is a website with users, it's not hard to guess that it will have two columns: username and password, and a table called "users". Therefore, I went straight to using the following query:</p>
 <code>' AND 1=CAST((SELECT username FROM users) AS int)-- -</code>
 <p>The error shown in the image is because the response cannot display multiple results at once, so we can use "LIMIT" to restrict it to a single result.</p>
