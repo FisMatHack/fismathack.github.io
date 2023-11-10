@@ -12,8 +12,7 @@
             <p>IP: 10.10.11.243
 <br>Machine Name: Broker
 <br>Difficulty: Easy</p>
-
-<br><br>
+<br>
 <p>Starting to scan with Nmap:</p>
 <code>sudo nmap --min-rate 5000 -sS -n -vvv -Pn 10.10.11.243 -oN scan_ports_tcp</code>
 <br>
@@ -22,12 +21,12 @@
 <br>
 <p>I saw something related to "ActiveMQ", I went on to search for "ActiveMQ default port" and found port "61616". I can also perform a scan of all ports (1-65535).</p>
 <code>sudo nmap --min-rate 5000 -sS -n -vvv -Pn -p- 10.10.11.243 -oN scan_all_ports_tcp</code>
-<br>
+<br><br>
 <img src="scan_all_ports.png" alt="scan all ports">
 
 <p>Since I knew the port through which ActiveMQ runs, I decided to run a scan with Nmap to detect the version number, also launching basic Nmap recon scripts.</p>
 <code>sudo nmap -sVC -vvv -p61616 10.10.11.243</code>
-<br>
+<br><br>
 <img src="detecting_version.png" alt="detecting version">
 <br>
 <p>Another alternative was to log in with the credentials "admin:admin" on the port 80 site and navigate to /admin. It was there that I detected the version.</p>
@@ -90,6 +89,7 @@ user root;<br>worker_processes auto;<br>pid /run/nginx2.pid;<br>include /etc/ngi
 <br><p>Do you have any questions or experience any problems trying to solve the machine? Contact me on Discord or just talk to me for a chat! I'm available to chat :).</p><code>FisMatHack#3733</code>
 <p>Thanks for reading :)</p>
 <p>References:<br><br>https://github.com/SaumyajeetDas/CVE-2023-46604-RCE-Reverse-Shell-Apache-ActiveMQ</p>
+<br><br><br><br><br><br>
 
         </div>
     </div>
