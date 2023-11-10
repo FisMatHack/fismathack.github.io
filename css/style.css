@@ -21,26 +21,3 @@
             font-size: 18px;
             margin: 5px 0;
         }
-        
-        .donate-button {
-            background-color: #0f0;
-            color: #fff;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            text-decoration: none;
-            display: inline-block;
-            margin: 5px;
-            font-family: 'Book Antiqua', serif; 
-        }
-        
-        .donate-button:hover {
-            background-color: #090;
-        }
-        
-        .donate-button::before {
-            content: "\1F4D6 "; 
-            font-size: 18px;
-            margin-right: 5px;
-        }
-        
