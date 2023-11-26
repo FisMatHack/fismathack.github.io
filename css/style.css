@@ -13,16 +13,17 @@ code {
   transition: background-color 0.3s ease;
 }
 
-        .donate-banner {
-            background-color: #333;
-            color: #fff;
-            text-align: center;
-            padding: 10px 0;
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-        }
+   .donate-banner {
+        background-color: #333;
+        color: #fff;
+        text-align: center;
+        padding: 10px 0;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        margin-top: 50px;
+    }
         
         .donation-text {
             font-size: 18px;
