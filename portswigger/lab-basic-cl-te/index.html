@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PortSwigger - HTTP request smuggling, basic CL.TE vulnerability</title>
+    <link rel="stylesheet" type="text/css" href="/css/style.css">
+    <link rel="stylesheet" type="text/css" href="/css/blog.css">
+</head>
+<body>
+    <div class="container">
+        <div class="article-content">
+            <h2>PortSwigger - HTTP request smuggling, basic CL.TE vulnerability</h2>
+        
+<h3>What is an HTTP Request Smuggling attack?</h3>
+</p>It allows manipulating HTTP request headers in a malicious way in order to trick the server, it is possible to make the server interpret them incorrectly. Classic request-smuggling attacks involve using the "Content-Length" and "Transfer-Encoding" headers in an HTTP/1 request, manipulating them so that the front-end and back-end servers process the request differently. Our payload will depend on the behavior of the front-end and back-end server.</p>
+
+<h3>What is CL.TE?</h3>
+<p>"CL.TE" refers to the combination of the "Content-Length" and "Transfer-Encoding" headers in the context of HTTP requests. In this scenario, the front-end prioritizes the "Content-Length" header, while the back-end prioritizes the "Transfer-Encoding" header. In other words, the Content-Length (CL) is placed first on the front-end, followed by the back-end, and then the Transfer-Encoding (TE) is handled. </p>
+<h3>Solving the lab.</h3>
+<p>Generate only one laboratory; afterwards, you should get this payload as a result:</p>
+<pre>
+<code>
+POST / HTTP/1.1
+Host: YOUR-LAB-ID.web-security-academy.net
+Connection: keep-alive
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 6
+Transfer-Encoding: chunked
+
+0
+
+G
+</code>
+</pre>
+<p>First of all, make sure that the protocol is "HTTP/1".</p>
+<img src="protocol.png" alt="protocol HTTP/1">
+<p>
+Now, let us proceed to explain the meaning of each line.
+<br><br>
+The main line of our code is "POST / HTTP/1.1". But what is it for and why do we choose this method instead of others? By specifying "POST", we indicate that the request will be sent using this particular method. This choice is because the POST method allows for more manipulation, especially with respect to the interpretation of request bodies and headers associated with data length and encoding.
+<br><br>
+By using "/", we indicate that we want to make a request to the root of the web resource. And by adding "HTTP/1.1", we establish that we want to use version 1.1 of the HTTP protocol.
+</p>
+<code>POST / HTTP/1.1</code>
+<p>With the "Host" header I specify the domain of the server.</p>
+<code>Host: YOUR-LAB-ID.web-security-academy.net</code>
+<p>Although the "Connection: keep-alive" header is not strictly necessary, it helps keep an HTTP connection open. This makes it possible to reuse that connection for future requests, which can result in improved efficiency and reduced latency in web applications.</p>
+<code>Connection: keep-alive</code>
+<p>With this, I am indicating that the data is encrypted.</p>
+<code>Content-Type: application/x-www-form-urlencoded</code>
+<p>Why is the value of "Content-Length" 6? "6" was used in the BurpSuite solution. In the comments section, I found someone claiming that it was the number of "0" to "G"(including "0" and "G").</p>
+<code>Content-Length: 8</code><br><br>
+<img src="Content_Length.png" alt="Content Length">
+<br>
+<p>With the statement "Transfer-Encoding: chunked", I am indicating that the request is fragmented using the "chunked" format, in which the data is divided into fragments or "chunks".</p>
+<code>Transfer-Encoding: chunked</code>
+<p>Why use the number "0"? By using the number "0", we are indicating that after the blank line there are no more data fragments in the message body.</p>
+<p>Why do we include the letter "G"? Actually, this is not crucial at all; we could simply use A, B, C, D, E, etc. Two letters could also be used as "GO", but the value of "Content-Length" would now have to be 7, since we have added one more letter.</p>
+
+<br><br><br><br><br><br><p>Do you have any questions or experience any problems trying to solve the machine? Contact me on Discord or just talk to me for a chat! I'm available to chat :).</p><code>FisMatHack#3733</code>
+<p>Thanks for reading :)</p>
+<p>Laboratory:<br><br>https://portswigger.net/web-security/request-smuggling/lab-basic-cl-te</p>
+
+        </div>
+    </div>
+    <div class="donate-banner">
+    <p>Do you like my content?</p>
+    <p class="donation-text">Support me by donating to my father's account!</p>
+    <a href="https://www.buymeacoffee.com/fismathack" class="donate-button">Donate book</a>
+</div>
+
+</body>
+</html>
