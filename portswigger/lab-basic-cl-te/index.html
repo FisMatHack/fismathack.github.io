@@ -32,7 +32,7 @@ G
 </code>
 </pre>
 <p>First of all, make sure that the protocol is "HTTP/1".</p>
-<img src="protocol.png" alt="protocol HTTP/1">
+<img src="protocol.PNG" alt="protocol HTTP/1">
 <p>
 Now, let us proceed to explain the meaning of each line.
 <br><br>
@@ -49,7 +49,7 @@ By using "/", we indicate that we want to make a request to the root of the web 
 <code>Content-Type: application/x-www-form-urlencoded</code>
 <p>Why is the value of "Content-Length" 6? "6" was used in the BurpSuite solution. In the comments section, I found someone claiming that it was the number of "0" to "G"(including "0" and "G").</p>
 <code>Content-Length: 8</code><br><br>
-<img src="Content_Length.png" alt="Content Length">
+<img src="Content_Length.PNG" alt="Content Length">
 <br>
 <p>With the statement "Transfer-Encoding: chunked", I am indicating that the request is fragmented using the "chunked" format, in which the data is divided into fragments or "chunks".</p>
 <code>Transfer-Encoding: chunked</code>
@@ -64,9 +64,9 @@ By using "/", we indicate that we want to make a request to the root of the web 
     </div>
     <div class="donate-banner">
     <p>Do you like my content?</p>
-    <p class="donation-text">Support me by donating to my father's account!</p>
-    <a href="https://www.buymeacoffee.com/fismathack" class="donate-button">Donate book</a>
-</div>
+    <p class="donation-text">Could you help me by donating a book?</p>
+<script type="text/javascript" src="https://cdnjs.buymeacoffee.com/1.0.0/button.prod.min.js" data-name="bmc-button" data-slug="fismathack" data-color="#00ff80" data-emoji="📖"  data-font="Cookie" data-text="Buy me a book" data-outline-color="#000000" data-font-color="#000000" data-coffee-color="#FFDD00" ></script></div>
+
 
 </body>
 </html>
