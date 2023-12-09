@@ -28,7 +28,7 @@
 <img src="filter_password.png" alt="filter password" style="max-width: 100%; height: auto;">
 <p>I also noticed something related to "ansible-vault". However, I didn't want to go through file by file, so I simply displayed the name of each file with the "-l" flag and passed an xargs cat to read each one. This gave me the following information:</p>
 <code>grep -ril "password" . | xargs cat</code><br><br>
-<img src="ansible_vault.png.png" alt="Ansible Vault" style="max-width: 100%; height: auto;">
+<img src="ansible_vault.png" alt="Ansible Vault" style="max-width: 100%; height: auto;">
 <p>That file would be found in "/mnt/development/Automation/Ansible/PWM/defaults/main.yml". To get a hash, I used "ansible2john" as follows:</p>
 <code>/usr/share/john/ansible2john.py /mnt/development/Automation/Ansible/PWM/defaults/main.yml > main.yml</code>
 <p>I looked at three hashed passwords and noticed that two hashes shared the same password. The contents of my "ldap_hash" variable are as follows:</p>
