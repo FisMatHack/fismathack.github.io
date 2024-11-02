@@ -4,12 +4,13 @@ title: About
 permalink: /about/
 ---
 
-Some information about you!
+I am a young man passionate about computers. Currently, I am the creator of the following machines in HackTheBox:
 
-### More Information
-
-A place to include any other types of information that you'd like to include about yourself.
+- [Sea](https://app.hackthebox.com/machines/Sea)
+- [Chemistry](https://app.hackthebox.com/machines/Chemistry)
 
 ### Contact me
 
-[email@domain.com](mailto:email@domain.com)
+[fismathack1@gmail.com](mailto:fismathack1@gmail.com)
+<br>
+Discord: FisMatHack
