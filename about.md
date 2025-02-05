@@ -8,9 +8,11 @@ I am a young man passionate about computers. Currently, I am the creator of the 
 
 - [Sea](https://app.hackthebox.com/machines/Sea)
 - [Chemistry](https://app.hackthebox.com/machines/Chemistry)
+- [Alert](https://app.hackthebox.com/machines/Alert)
+- [Cat](https://app.hackthebox.com/machines/Cat)
 
-### Contact me
+### Social Networks
 
-[fismathack1@gmail.com](mailto:fismathack1@gmail.com)
 <br>
+Youtube: https://www.youtube.com/@fismathack6297
 Discord: FisMatHack
