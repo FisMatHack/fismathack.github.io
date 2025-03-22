@@ -3,6 +3,8 @@ layout: post
 title: Alert - WriteUp
 ---
 
+Alert is a machine where we will exploit an XSS, LFI and a permissions misconfiguration.
+
 # WriteUp
 
 Starting with the Nmap scan:
