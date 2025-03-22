@@ -168,7 +168,7 @@ URL: "http://alert.htb/visualizer.php?link_share=65eccab5d5d660.08631508.md". Su
 sharing functionality. It could be that the administrator is seeing this. So, I leave a message in
 "contact":
 
-![]({{ site.baseurl }}/images/contact_us.png)
+![]({{ site.baseurl }}/images/contact.png)
 
 Since I didn't see anything in messages.php from my side, I will check if the user can access this
 one:
