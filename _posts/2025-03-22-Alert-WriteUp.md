@@ -136,9 +136,7 @@ I add to /etc/hosts:
 echo "<IP> statistics.alert.htb" | sudo tee -a /etc/hosts
 ```
 
-I see this:
-
-![]({{ site.baseurl }}/images/statistics.png)
+HTTP basic authentication is applied in statistics.alert.htb.
 
 Subsequently, I find this: "https://book.hacktricks.xyz/pentesting-web/xss-cross-site-scripting/xss-i
 n-markdown". There is a way to get an XSS through Markdown. The tags that worked for me when
@@ -233,10 +231,11 @@ I found the hash $apr1$bMoRBJOg$igG8WBtQ1xYDTQdLjSWZQ/ which I cracked:
 hashcat -a 0 -m 1600 creds.hash /usr/share/wordlists/rockyou.txt
 ```
 
-I find the password is manchesterunited .
+I find the password is manchesterunited.
+
 On the statistics.alert.htb site I see this:
 
-![]({{ site.baseurl }}/images/dashboard.png)
+![]({{ site.baseurl }}/images/statistics.png)
 
 I see emails, I also see incoming donation income, but, when testing those credentials for ssh they
 work.
